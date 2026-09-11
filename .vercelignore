@@ -1,0 +1,11 @@
+# Ignore Python backend files — backend runs on Railway, not Vercel
+api.py
+app1.py
+src/
+requirements.txt
+pyproject.toml
+render.yaml
+data/
+models/
+.venv/
+__pycache__/
