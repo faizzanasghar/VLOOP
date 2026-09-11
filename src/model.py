@@ -45,7 +45,7 @@ def main():
     vectors_cv = cv.fit_transform(df['tags_stemmed']).toarray()
     
     print("Computing Cosine Similarity for CountVectorizer...")
-    similarity_cv = cosine_similarity(vectors_cv)
+    similarity_cv = cosine_similarity(vectors_cv).astype('float32')
     
     # 2. Vectorization with TfidfVectorizer (Bonus!)
     print("Vectorizing using TfidfVectorizer...")
@@ -53,7 +53,7 @@ def main():
     vectors_tfidf = tfidf.fit_transform(df['tags_stemmed']).toarray()
     
     print("Computing Cosine Similarity for TfidfVectorizer...")
-    similarity_tfidf = cosine_similarity(vectors_tfidf)
+    similarity_tfidf = cosine_similarity(vectors_tfidf).astype('float32')
     
     # Data to save (exclude the raw tags and lists to keep it lightweight)
     df_to_save = df[['movie_id', 'title', 'overview', 'genres_original', 'cast_original', 'director_original', 'popularity', 'vote_average']]

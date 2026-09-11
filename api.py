@@ -15,7 +15,6 @@ import uvicorn
 sys.path.append(os.path.abspath("src"))
 
 from recommender import MovieRecommender
-from pydantic import BaseModel
 
 app = FastAPI(title="Vloop API", description="Vloop Movie Recommendation Backend API")
 
@@ -40,7 +39,9 @@ class WatchlistPayload(BaseModel):
 
 
 def ensure_db_directory():
-    os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+    db_dir = os.path.dirname(DB_PATH)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
 
 
 def get_db():
@@ -114,13 +115,44 @@ def save_watchlist_for_user(username: str, watchlist):
 # ----------------------------------------------------
 # 🚂 MODEL INITIALIZATION & CACHE
 # ----------------------------------------------------
+
+def build_models_if_missing():
+    """Run preprocessing and training if pkl files are not found."""
+    models_dir = "models"
+    required = ["movies_dict.pkl", "similarity_cv.pkl", "similarity_tfidf.pkl"]
+    all_exist = all(os.path.exists(os.path.join(models_dir, f)) for f in required)
+    if all_exist:
+        return
+
+    print("Model files not found — building from raw data...")
+    try:
+        import nltk
+        nltk.download('punkt', quiet=True)
+        nltk.download('stopwords', quiet=True)
+    except Exception:
+        pass
+
+    # Step 1: Preprocess
+    preprocessed_path = os.path.join("data", "preprocessed_movies.csv")
+    if not os.path.exists(preprocessed_path):
+        print("Running preprocess.py...")
+        import preprocess
+        preprocess.main()
+
+    # Step 2: Train models
+    print("Running model.py training...")
+    import model as model_trainer
+    model_trainer.main()
+    print("Model build complete.")
+
+
+build_models_if_missing()
 init_db()
 recommender = None
 try:
     recommender = MovieRecommender("models")
 except Exception as e:
     print(f"Error loading recommender system: {e}")
-    # We will raise errors or load mock data if needed, but since models exist, it will load.
 
 # In-memory cache for poster URLs to avoid repeated TMDB API hits
 poster_cache = {}
